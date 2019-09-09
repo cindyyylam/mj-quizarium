@@ -13,7 +13,7 @@ app.use(
 require("dotenv").config();
 
 //constants
-const port = 80;
+const port = 3000;
 const telegram_send_url = "https://api.telegram.org/bot" + process.env.BOT_TOKEN + "/sendMessage";
 const telegram_delete_url = "https://api.telegram.org/bot" + process.env.BOT_TOKEN + "/deleteMessage";
 
@@ -217,7 +217,7 @@ app.post("/", (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
+    // console.log(`Listening on port ${port}`);
 })
 
 const stop = (message, state, res) => {
