@@ -1,0 +1,4 @@
+.env
+now.json
+node_modules
+netlify.toml
