@@ -13,7 +13,7 @@ app.use(
 require("dotenv").config();
 
 //constants
-const port = 3000;
+const port = process.env.PORT || 5000;
 const telegram_send_url = "https://api.telegram.org/bot" + process.env.BOT_TOKEN + "/sendMessage";
 const telegram_delete_url = "https://api.telegram.org/bot" + process.env.BOT_TOKEN + "/deleteMessage";
 
