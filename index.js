@@ -67,11 +67,13 @@ app.post("/", async (req, res) => {
                             chatId: message.chat.id,
                             gameState: GAME_STATES.GAME_IN_PLAY
                         };
-                        db.insertState(state).catch(err =>
-                            console.log(
-                                "index > /start > insertState > ERROR:",
-                                err.message
-                            )
+                        db.insertState(state).catch(err => {
+                                console.log(
+                                    "index > /start > insertState > ERROR:",
+                                    err.message
+                                )
+                                res.send({});
+                            }
                         );
                     } else if (state.gameState === GAME_STATES.GAME_IN_PLAY) {
                         sendMessage(message.chat.id, GAME_ALREADY_IN_PLAY_MESSAGE, res);
@@ -81,18 +83,23 @@ app.post("/", async (req, res) => {
                             ...state,
                             gameState: GAME_STATES.GAME_IN_PLAY
                         };
-                        db.updateState(state).catch(err =>
-                            console.log(
-                                "index > /start > updateState > ERROR:",
-                                err.message
-                            )
+                        db.updateState(state).catch(err => {
+                                console.log(
+                                    "index > /start > updateState > ERROR:",
+                                    err.message
+                                )
+                                res.send({});
+                            }
                         );
                     }
                     console.log("index > /start > STATE:", state);
 
                     startGame(message, state, res);
                 })
-                .catch(err => console.log("index > /start > ERROR:", err.message));
+                .catch(err => {
+                    console.log("index > /start > ERROR:", err.message);
+                    res.send({});
+                });
         } else if (text.match(/^(\/stop|\/stop@mjquizariumbot)$/)) {
             db.selectState(message.chat.id)
                 .then(row => {
@@ -113,7 +120,10 @@ app.post("/", async (req, res) => {
 
                     stop(message, state, res);
                 })
-                .catch(err => console.log("index > /stop > ERROR:", err.message));
+                .catch(err => {
+                    console.log("index > /stop > ERROR:", err.message);
+                    res.send({});
+                });
         } else if (text.match(/^\/extend$/)) {
             db.selectState(message.chat.id)
                 .then(row => {
@@ -141,12 +151,13 @@ app.post("/", async (req, res) => {
                     }
                     questionMap.set(message.chat.id, questionState);
                 })
-                .catch(err =>
+                .catch(err => {
                     console.log(
                         "index > /extend > selectState > ERROR:",
                         err.message
-                    )
-                );
+                    );
+                    res.send({});
+                });
         } else if (text.match(/^\/add$/)) {
             db.selectState(message.chat.id)
                 .then(row => {
@@ -156,18 +167,23 @@ app.post("/", async (req, res) => {
                             chatId: message.chat.id,
                             gameState: GAME_STATES.GAME_NOT_IN_PLAY
                         };
-                        db.insertState(state).catch(err =>
-                            console.log(
-                                "index > /add > insertState > ERROR:",
-                                err.message
-                            )
+                        db.insertState(state).catch(err => {
+                                console.log(
+                                    "index > /add > insertState > ERROR:",
+                                    err.message
+                                );
+                                res.send({});
+                            }
                         );
                     }
                     console.log("index > /add > STATE:", state);
 
                     add(message, state, res);
                 })
-                .catch(err => console.log("index > /add > ERROR:", err.message));
+                .catch(err => {
+                    console.log("index > /add > ERROR:", err.message);
+                    res.send({});
+                });
         } else if (text.match(/^\/help$/)) {
             if (message.chat.type !== "private") {
                 return;
@@ -185,12 +201,13 @@ app.post("/", async (req, res) => {
                             chatId: message.chat.id,
                             gameState: GAME_STATES.GAME_NOT_IN_PLAY
                         };
-                        db.insertState(state).catch(err =>
+                        db.insertState(state).catch(err => {
                             console.log(
                                 "index > message > insertState > ERROR:",
                                 err.message
-                            )
-                        );
+                            );
+                            res.send({});
+                        });
                     }
                     console.log("index > message > STATE:", state);
 
@@ -207,7 +224,10 @@ app.post("/", async (req, res) => {
                             break;
                     }
                 })
-                .catch(err => console.log("index > message > ERROR:", err.message));
+                .catch(err => {
+                    console.log("index > message > ERROR:", err.message);
+                    res.send({});
+                });
         }
     } else {
         res.send({});
@@ -238,9 +258,10 @@ const stop = (message, state, res) => {
         ...state,
         gameState: GAME_STATES.GAME_NOT_IN_PLAY
     };
-    db.updateState(state).catch(err =>
-        console.log("index > stop > updateState > ERROR:", err.message)
-    );
+    db.updateState(state).catch(err => {
+        console.log("index > stop > updateState > ERROR:", err.message);
+        res.send({});
+    });
 };
 
 const add = (message, state, res) => {
@@ -255,9 +276,10 @@ const add = (message, state, res) => {
         ...state,
         gameState: GAME_STATES.ADDING_QUESTION
     };
-    db.updateState(state).catch(err =>
-        console.log("index > add > updateState > ERROR:", err.message)
-    );
+    db.updateState(state).catch(err => {
+        console.log("index > add > updateState > ERROR:", err.message);
+        res.send({});
+    });
 
     sendMessage(chat.id, ADD_QUESTION_MESSAGE, res);
 };
@@ -278,20 +300,22 @@ const addQuestion = (message, state, res) => {
         author: from.first_name,
         username: from.username
     };
-    db.insertQuestion(question).catch(err =>
+    db.insertQuestion(question).catch(err => {
         console.log(
             "index > addQuestion > insertQuestion > ERROR:",
             err.message
-        )
-    );
+        );
+        res.send({});
+    });
 
     state = {
         ...state,
         gameState: GAME_STATES.GAME_NOT_IN_PLAY
     };
-    db.updateState(state).catch(err =>
-        console.log("index > addQuestion > updateState > ERROR:", err.message)
-    );
+    db.updateState(state).catch(err => {
+        console.log("index > addQuestion > updateState > ERROR:", err.message);
+        res.send({});
+    });
 
     sendMessage(chat.id, ADD_SUCCESS_MESSAGE, res);
 };
@@ -342,7 +366,10 @@ const startGame = (message, state, res) => {
                 sendQuestion(chatId, res);
             }, 3000);
         })
-        .catch(err => console.log("index > startGame > ERROR:", err.message));
+        .catch(err => {
+            console.log("index > startGame > ERROR:", err.message);
+            res.send({});
+        });
 };
 
 const sendQuestion = (chatId, res) => {
@@ -445,12 +472,13 @@ const answerQuestion = (message, state, res) => {
             ...state,
             gameState: GAME_STATES.GAME_NOT_IN_PLAY
         };
-        db.updateState(state).catch(err =>
+        db.updateState(state).catch(err => {
             console.log(
                 "index > answerQuestion > updateState > ERROR:",
                 err.message
-            )
-        );
+            );
+            res.send({});
+        });
 
         sendMessage(chat.id, "Please restart game.", res);
         return;
@@ -504,9 +532,10 @@ const endGame = (chatId, res) => {
             // show leaderboards maybe
             sendMessage(chatId, END_GAME_MESSAGE, res);
         })
-        .catch(err =>
-            console.log("index > endGame > updateState > ERROR:", err.message)
-        );
+        .catch(err => {
+            console.log("index > endGame > updateState > ERROR:", err.message);
+            res.send({});
+        });
 };
 
 const sendMessage = (chatId, reply, res, opts = {}) => {
@@ -522,5 +551,6 @@ const sendMessage = (chatId, reply, res, opts = {}) => {
         })
         .catch(err => {
             console.log("index > sendMessage > ERROR:", err.message);
+            res.send({});
         })
 }
