@@ -49,7 +49,7 @@ let questionMap = new Map();
 // timeout map
 let timeOutMap = new Map();
 
-app.post("/", (req, res) => {
+app.post("/", async (req, res) => {
     res.status(200);
 
     console.log("message received:", req.body);
@@ -456,7 +456,7 @@ const answerQuestion = (message, state, res) => {
         return;
     }
 
-    let { currentQuestionNo, noOfRounds, questions } = questionState;
+    let { currentQuestionNo, currentHintNo, noOfRounds, questions } = questionState;
     let { answer } = questions[currentQuestionNo - 1];
 
     if (answer.toLowerCase() === text.toLowerCase()) {
