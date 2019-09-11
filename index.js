@@ -547,6 +547,8 @@ const sendMessage = (chatId, reply, res, opts = {}) => {
             ...opts
         })
         .then(response => {
+            console.log("index > sendMessage > CHAT ID:", chatId);
+            console.log("index > sendMessage > TEXT:", reply);
             res.send({});
         })
         .catch(err => {
