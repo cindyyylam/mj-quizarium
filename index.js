@@ -28,7 +28,7 @@ const START_GAME_MESSAGE = noOfRounds => `${noOfRounds} rounds! Let's begin! You
 const STOP_GAME_MESSAGE = "The current game has been stopped.";
 const NO_GAME_IN_PLAY_MESSAGE = "No game is currently in play.";
 const HELP_MESSAGE =
-    "Welcome to *MJ Quizarium*!\nHere is a list of commands to help you.\n\n/start - Start a new game\n/stop - Stop the current game\n/extend - Extend the game for another 10 rounds\n/add - Add a new question\n/help - Send help lol";
+    "Welcome to *MJ Quizarium*! 👊🏻👊🏼👊🏽👊🏾👊🏿\nHere is a list of commands to help you.\n\n/start - Start a new game\n/stop - Stop the current game\n/extend - Extend the game for another 10 rounds\n/add - Add a new question\n/help - Send help lol";
 const ADD_QUESTION_MESSAGE =
     "Let's add a new question. Please use this format:\n\n_question - answer_\nExample: _When was NTU MJ formed? - 1993_";
 const ADD_SUCCESS_MESSAGE =
@@ -36,10 +36,12 @@ const ADD_SUCCESS_MESSAGE =
 const ADD_FAILURE_MESSAGE =
     "That's not a valid format. Please use this format:\n\n_When was NTU MJ formed?_ - _1993_";
 const END_GAME_MESSAGE = (pointsMap) => {
-    let template = `Game Ended!\n\n🏆 The winners are:\n`;
+    let template = `Game Ended! 🎊\n\n🏆 The winners are:\n`;
 
     let pointsArray = [...pointsMap.entries()];
+    console.log("index > END_GAME_MESSAGE > POINTS ARRAY:", pointsArray);
     pointsArray.sort((a, b) => b.points-a.points).forEach((player, index) => {
+        template += `     `;
         switch (index) {
             case 1:
                 template += `🥇 `;
@@ -426,8 +428,9 @@ const answerQuestion = async (message) => {
             } else {
                 pointsMap.set(message.from.id, { id: message.from.id, name: message.from.first_name, username: message.from.username, points, answers: 1 });
             }
+            console.log("index > answerQuestion > POINTS MAP:", pointsMap);
 
-            let reply = `✅ Yes, the correct answer is *${answer}*!\n\n${message.from.first_name} +${points}`;
+            let reply = `✅ Yes, the correct answer is *${answer}*!\n\n🎉 ${message.from.first_name} +${points}`;
             sendMessage(chatId, reply);
 
             if (currentQuestionNo === noOfRounds) {
