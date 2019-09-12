@@ -62,7 +62,17 @@ const END_GAME_MESSAGE = (pointsMap) => {
     return template;
 }
 const LEADERBOARD_MESSAGE = (leaderboard) => {
+    if (leaderboard && leaderboard.length) {
+        let template = `🏆 All Time Leaderboard 🏆\n`;
 
+        leaderboard.sort((a, b) => b.points - a.points).forEach(({ name, username, points, answers }, index) => {
+            template += `     ${index}. *${name}* - ${points} points _(${answers} answers)_\n`;
+        });
+
+        return template;
+    } else {
+        return `No leaderboard as of now`;
+    }
 }
 
 // state machine
@@ -131,7 +141,7 @@ app.post("/", async (req, res) => {
                 res.send({});
                 return;
             }
-        } else if (text.match(/^\/add$/)) {
+        } else if (text.match(/^(\/add|\/add@mjquizariumbot)$/)) {
             try {
                 let state = stateMap.get(message.chat.id);
                 if (!state) {
@@ -142,6 +152,17 @@ app.post("/", async (req, res) => {
                 await add(message, state);
             } catch (e) {
                 console.log("index > /add > ERROR:", e.message);
+            } finally {
+                res.send({});
+                return;
+            }
+        } else if (text.match(/^(\/stats|\/stats@mjquizariumbot)$/)){
+            try {
+                let leaderboard = await db.getLeaderboard();
+                console.log("index > /stats > LEADERBOARD:", leaderboard);
+                sendMessage(chatId, LEADERBOARD_MESSAGE(leaderboard));
+            } catch (e) {
+                console.log("index > /stats > ERROR:", e.message);
             } finally {
                 res.send({});
                 return;
