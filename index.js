@@ -160,7 +160,7 @@ app.post("/", async (req, res) => {
             try {
                 let leaderboard = await db.getLeaderboard();
                 console.log("index > /stats > LEADERBOARD:", leaderboard);
-                sendMessage(chatId, LEADERBOARD_MESSAGE(leaderboard));
+                sendMessage(message.chat.id, LEADERBOARD_MESSAGE(leaderboard));
             } catch (e) {
                 console.log("index > /stats > ERROR:", e.message);
             } finally {
