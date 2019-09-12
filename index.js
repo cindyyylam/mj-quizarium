@@ -35,7 +35,30 @@ const ADD_SUCCESS_MESSAGE =
     "The new question has been successfully added. Thank you! :)";
 const ADD_FAILURE_MESSAGE =
     "That's not a valid format. Please use this format:\n\n_When was NTU MJ formed?_ - _1993_";
-const END_GAME_MESSAGE = "GAME END!!!";
+const END_GAME_MESSAGE = (pointsMap) => {
+    let template = `Game Ended!\n\n🏆 The winners are:\n`;
+
+    let pointsArray = [...pointsMap.entries()];
+    pointsArray.sort((a, b) => b.points-a.points).forEach((player, index) => {
+        switch (index) {
+            case 1:
+                template += `🥇 `;
+                break;
+            case 2:
+                template += `🥈 `;
+                break;
+            case 3:
+                template += `🥉 `;
+                break;
+            default:
+                template += `🏅 `;
+                break;
+        }
+        template += `*${player.first_name}* ${player.points} points _(answers: ${player.answers})_\n`;
+    })
+
+    return template;
+}
 
 // state machine
 let GAME_STATES = {
@@ -47,6 +70,7 @@ let GAME_STATES = {
 let stateMap = new Map();
 let questionMap = new Map();
 let timeOutMap = new Map();
+let pointsMap = new Map();
 
 app.post("/", async (req, res) => {
     res.status(200);
@@ -70,6 +94,7 @@ app.post("/", async (req, res) => {
                 console.log("index > /start > ERROR:", e.message);
             } finally {
                 res.send({});
+                return;
             }
         } else if (text.match(/^(\/stop|\/stop@mjquizariumbot)$/)) {
             try {
@@ -84,8 +109,9 @@ app.post("/", async (req, res) => {
                 console.log("index > /stop > ERROR:", e.message);
             } finally {
                 res.send({});
+                return;
             }
-        } else if (text.match(/^\/extend$/)) {
+        } else if (text.match(/^(\/extend|\/extend@mjquizariumbot)$/)) {
             try {
                 let state = stateMap.get(message.chat.id);
                 if (!state) {
@@ -98,6 +124,7 @@ app.post("/", async (req, res) => {
                 console.log("index > /extend > ERROR:", e.message);
             } finally {
                 res.send({});
+                return;
             }
         } else if (text.match(/^\/add$/)) {
             try {
@@ -112,6 +139,7 @@ app.post("/", async (req, res) => {
                 console.log("index > /add > ERROR:", e.message);
             } finally {
                 res.send({});
+                return;
             }
         } else if (text.match(/^\/help$/)) {
             try {
@@ -124,6 +152,7 @@ app.post("/", async (req, res) => {
                 console.log("index > /help > ERROR:", e.message);
             } finally {
                 res.send({});
+                return;
             }
         } else if (text.match(/^\/help@mjquizariumbot$/)) {
             try {
@@ -132,6 +161,7 @@ app.post("/", async (req, res) => {
                 console.log("index > /help@mjquizariumbot > ERROR:", e.message);
             } finally {
                 res.send({});
+                return;
             }
         } else if (!text.startsWith("/")) {
             try {
@@ -157,11 +187,11 @@ app.post("/", async (req, res) => {
                 console.log("index > message > ERROR:", e.message);
             } finally {
                 res.send({});
+                return;
             }
         }
-    } else {
-        res.send({});
-    }    
+    }
+    res.send({});  
 
 });
 
@@ -306,6 +336,7 @@ const add = async (message, state) => {
             return;
         } else if (state && state.gameState === GAME_STATES.GAME_IN_PLAY) {
             sendMessage(chat.id, GAME_CURRENTLY_IN_PLAY_MESSAGE);
+            return;
         }
 
         if (!state) {
@@ -370,13 +401,33 @@ const answerQuestion = async (message) => {
         let { currentQuestionNo, noOfRounds, questions } = questionState;
         let { answer } = questions[currentQuestionNo - 1];
 
-        if (text.toLowerCase() === answer.toLowerCase()) {
+        if (text.toLowerCase().includes(answer.toLowerCase())) {
             let timeoutObj = timeOutMap.get(chatId);
             clearTimeout(timeoutObj);
             timeOutMap.delete(chatId);
 
-            let reply = `✅ Yes, the correct answer is *${answer}*!`;
+            let points;
+            switch (currentHintNo) {
+                case 0:
+                    points = 5;
+                    break;
+                case 1:
+                    points = 3;
+                    break;
+                case 2:
+                    points = 1;
+                    break;
+                default:
+                    break;
+            }
+            let playerStats = pointsMap.get(message.from.id);
+            if (playerStats) {
+                pointsMap.set(message.from.id, { id: message.from.id, name: message.from.first_name, username: message.from.username, points: playerStats.points + points, answers: playerStats.answers += 1 });
+            } else {
+                pointsMap.set(message.from.id, { id: message.from.id, name: message.from.first_name, username: message.from.username, points, answers: 1 });
+            }
 
+            let reply = `✅ Yes, the correct answer is *${answer}*!\n\n${message.from.first_name} +${points}`;
             sendMessage(chatId, reply);
 
             if (currentQuestionNo === noOfRounds) {
@@ -498,7 +549,9 @@ const endGame = async (chatId) => {
 
         questionMap.delete(chatId);
 
-        sendMessage(chatId, END_GAME_MESSAGE);
+        //TODO: add points to db
+
+        sendMessage(chatId, END_GAME_MESSAGE(pointsMap));
     } catch (e) {
         console.log("index > endGame > ERROR:", e.message);
     }
