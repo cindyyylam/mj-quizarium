@@ -36,28 +36,32 @@ const ADD_SUCCESS_MESSAGE =
 const ADD_FAILURE_MESSAGE =
     "That's not a valid format. Please use this format:\n\n_When was NTU MJ formed?_ - _1993_";
 const END_GAME_MESSAGE = (pointsMap) => {
-    let template = `Game Ended! 🎊\n\n🏆 The winners are:\n`;
+    let template = `Game Ended! 🎊`;
 
     let pointsArray = [...pointsMap.values()];
     console.log("index > END_GAME_MESSAGE > POINTS ARRAY:", pointsArray);
-    pointsArray.sort((a, b) => b.points-a.points).forEach(({ name, username, points, answers }, index) => {
-        template += `     `;
-        switch (index) {
-            case 1:
-                template += `🥇 `;
-                break;
-            case 2:
-                template += `🥈 `;
-                break;
-            case 3:
-                template += `🥉 `;
-                break;
-            default:
-                template += `🏅 `;
-                break;
-        }
-        template += `*${name}* - ${points} points _(${answers} answers)_\n`;
-    })
+
+    if (pointsArray.length) {
+        template += `\n\n🏆 The winners are:\n`;
+        pointsArray.sort((a, b) => b.points-a.points).forEach(({ name, username, points, answers }, index) => {
+            template += `     `;
+            switch (index) {
+                case 1:
+                    template += `🥇 `;
+                    break;
+                case 2:
+                    template += `🥈 `;
+                    break;
+                case 3:
+                    template += `🥉 `;
+                    break;
+                default:
+                    template += `🏅 `;
+                    break;
+            }
+            template += `*${name}* - ${points} points _(${answers} answers)_\n`;
+        })
+    }
 
     return template;
 }
