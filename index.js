@@ -38,9 +38,9 @@ const ADD_FAILURE_MESSAGE =
 const END_GAME_MESSAGE = (pointsMap) => {
     let template = `Game Ended! 🎊\n\n🏆 The winners are:\n`;
 
-    let pointsArray = [...pointsMap.entries()];
+    let pointsArray = [...pointsMap.values()];
     console.log("index > END_GAME_MESSAGE > POINTS ARRAY:", pointsArray);
-    pointsArray.sort((a, b) => b.points-a.points).forEach((player, index) => {
+    pointsArray.sort((a, b) => b.points-a.points).forEach(({ name, username, points, answers }, index) => {
         template += `     `;
         switch (index) {
             case 1:
@@ -56,7 +56,7 @@ const END_GAME_MESSAGE = (pointsMap) => {
                 template += `🏅 `;
                 break;
         }
-        template += `*${player.first_name}* ${player.points} points _(answers: ${player.answers})_\n`;
+        template += `*${name}* ${points} points _(answers: ${answers})_\n`;
     })
 
     return template;
@@ -410,13 +410,13 @@ const answerQuestion = async (message) => {
 
             let points;
             switch (currentHintNo) {
-                case 0:
+                case 1:
                     points = 5;
                     break;
-                case 1:
+                case 2:
                     points = 3;
                     break;
-                case 2:
+                case 3:
                     points = 1;
                     break;
                 default:
@@ -473,7 +473,7 @@ const sendQuestion = (chatId) => {
         currentQuestionNo - 1
     ];
 
-    let template = `❓ *QUESTION* ${currentQuestionNo}/${noOfRounds}\n${question} - _by ${author} ${username ? `(@${username})` : null}_\n`;
+    let template = `❓ *QUESTION* ${currentQuestionNo}/${noOfRounds}\n${question} - _by ${author}${username ? ` (@${username})` : ``}_\n`;
 
     switch (currentHintNo) {
         case 0:
