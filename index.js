@@ -398,7 +398,7 @@ const answerQuestion = async (message) => {
         let questionState = questionMap.get(chatId);
         if (!questionState) return;
 
-        let { currentQuestionNo, noOfRounds, questions } = questionState;
+        let { currentQuestionNo, currentHintNo, noOfRounds, questions } = questionState;
         let { answer } = questions[currentQuestionNo - 1];
 
         if (text.toLowerCase().includes(answer.toLowerCase())) {
@@ -470,7 +470,7 @@ const sendQuestion = (chatId) => {
         currentQuestionNo - 1
     ];
 
-    let template = `❓ *QUESTION* ${currentQuestionNo}/${noOfRounds}\n${question} - _by ${author} (@${username})_\n`;
+    let template = `❓ *QUESTION* ${currentQuestionNo}/${noOfRounds}\n${question} - _by ${author} ${username ? `(@${username})` : null}_\n`;
 
     switch (currentHintNo) {
         case 0:
