@@ -56,10 +56,13 @@ const END_GAME_MESSAGE = (pointsMap) => {
                 template += `🏅 `;
                 break;
         }
-        template += `*${name}* ${points} points _(answers: ${answers})_\n`;
+        template += `*${name}* - ${points} points _(${answers} answers)_\n`;
     })
 
     return template;
+}
+const LEADERBOARD_MESSAGE = (leaderboard) => {
+
 }
 
 // state machine
@@ -221,7 +224,7 @@ const start = async (message, state) => {
                 gameState: GAME_STATES.GAME_IN_PLAY
             };
             await db.updateState(state);
-            stateMap.set(chatId, { chatId, gameState: state.gameState });
+            stateMap.set(chatId, state);
         }
 
         let questions = await db.selectAllQuestions();
@@ -291,8 +294,7 @@ const stop = async (message, state) => {
                 gameState: GAME_STATES.GAME_NOT_IN_PLAY
             };
             await db.updateState(state);
-
-            stateMap.set(chatId, { chatId, gameState: state.gameState });
+            stateMap.set(chatId, state);
         }
     } catch (e) {
         console.log("index > stop > ERROR:", e.message);
@@ -341,12 +343,15 @@ const add = async (message, state) => {
             return;
         }
 
+        newState = { 
+            chatId: chat.id, gameState: GAME_STATES.ADDING_QUESTION 
+        };
         if (!state) {
-            await db.insertState({ chatId: chat.id, gameState: GAME_STATES.ADDING_QUESTION });
+            await db.insertState(newState);
         } else {
-            await db.updateState({ chatId: chat.id, gameState: GAME_STATES.ADDING_QUESTION });
+            await db.updateState(newState);
         }
-        stateMap.set(chat.id, { chatId: chat.id, gameState: GAME_STATES.ADDING_QUESTION });
+        stateMap.set(chat.id, newState);
 
 
         sendMessage(chat.id, ADD_QUESTION_MESSAGE);
@@ -380,7 +385,7 @@ const addQuestion = async (message, state) => {
             gameState: GAME_STATES.GAME_NOT_IN_PLAY
         };
         await db.updateState(state);
-        stateMap.set(chat.id, { chatId: chat.id, gameState: state.gameState });
+        stateMap.set(chat.id, state);
 
         sendMessage(chat.id, ADD_SUCCESS_MESSAGE);
     } catch (e) {
@@ -424,9 +429,9 @@ const answerQuestion = async (message) => {
             }
             let playerStats = pointsMap.get(message.from.id);
             if (playerStats) {
-                pointsMap.set(message.from.id, { id: message.from.id, name: message.from.first_name, username: message.from.username, points: playerStats.points + points, answers: playerStats.answers += 1 });
+                pointsMap.set(message.from.id, { userId: message.from.id, name: message.from.first_name, username: message.from.username, points: playerStats.points + points, answers: playerStats.answers += 1 });
             } else {
-                pointsMap.set(message.from.id, { id: message.from.id, name: message.from.first_name, username: message.from.username, points, answers: 1 });
+                pointsMap.set(message.from.id, { userId: message.from.id, name: message.from.first_name, username: message.from.username, points, answers: 1 });
             }
             console.log("index > answerQuestion > POINTS MAP:", pointsMap);
 
@@ -547,14 +552,36 @@ const endGame = async (chatId) => {
             gameState: GAME_STATES.GAME_NOT_IN_PLAY
         };
 
+        sendMessage(chatId, END_GAME_MESSAGE(pointsMap));
+
         await db.updateState(state);
-        stateMap.set(chatId, { chatId, gameState: state.gameState });
+        stateMap.set(chatId, state);
 
         questionMap.delete(chatId);
+        timeOutMap.delete(chatId);
 
-        //TODO: add points to db
-
-        sendMessage(chatId, END_GAME_MESSAGE(pointsMap));
+        let leaderboard = await db.selectUsers([...pointsMap.keys()].map((key) => ({ userId: key })));
+        console.log("index > endGame > OLD LEADERBOARD:", leaderboard);
+        let newLeaderboard = pointsMap.map(({ userId, name, username, points, answers }) => {
+            let existingUser = leaderboard.find(({ userId: id }) => id === userId);
+            if (existingUser) {
+                points += existingUser.points;
+                answers += existingUser.answers;
+            }
+            return {
+                userId,
+                name,
+                username,
+                points,
+                answers
+            }
+        })
+        console.log("index > endGame > NEW LEADERBOARD:", newLeaderboard);
+        await db.upsertLeaderboard(newLeaderboard);
+        pointsMap = new Map();
+        let overAllLeaderboard = await db.getLeaderboard();
+        console.log("index > endGame > OVERALL LEADERBOARD:", overAllLeaderboard);
+        sendMessage(chatId, LEADERBOARD_MESSAGE(overAllLeaderboard));
     } catch (e) {
         console.log("index > endGame > ERROR:", e.message);
     }
