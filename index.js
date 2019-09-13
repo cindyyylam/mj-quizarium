@@ -72,7 +72,7 @@ const END_GAME_MESSAGE = (pointsArray) => {
 }
 const LEADERBOARD_MESSAGE = (leaderboard) => {
     if (leaderboard && leaderboard.length) {
-        let template = `🏆 All Time Leaderboard 🏆\n`;
+        let template = `🏆 *All Time Leaderboard* 🏆\n`;
 
         leaderboard.sort((a, b) => b.points - a.points).forEach(({ name, username, points, answers }, index) => {
             template += `     ${index+=1}. *${name}* - ${points} points _(${answers} answers)_\n`;
