@@ -583,7 +583,7 @@ const endGame = async (chatId) => {
         
         setTimeout(function () {
             sendMessage(chatId, END_GAME_MESSAGE(pointsArray));
-        }, 3000);
+        }, 2000);
 
         let state = {
             chatId,
@@ -603,7 +603,9 @@ const endGame = async (chatId) => {
         
         let overAllLeaderboard = await db.getLeaderboard();
         console.log("index > endGame > OVERALL LEADERBOARD:", overAllLeaderboard);
-        sendMessage(chatId, LEADERBOARD_MESSAGE(overAllLeaderboard));
+        setTimeout(function () {
+            sendMessage(chatId, LEADERBOARD_MESSAGE(overAllLeaderboard));
+        }, 2000);
     } catch (e) {
         console.log("index > endGame > ERROR:", e.message);
     }
