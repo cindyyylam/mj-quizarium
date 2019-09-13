@@ -24,7 +24,7 @@ const PRIVATE_COMMAND_ONLY_MESSAGE = command =>
     `The command ${command} can only be used in a private chat.`;
 const GAME_ALREADY_IN_PLAY_MESSAGE = "A game is already in play.";
 const GAME_CURRENTLY_IN_PLAY_MESSAGE = "A game is currently in play.";
-const START_GAME_MESSAGE = noOfRounds => `${noOfRounds} rounds! Let's begin! You can extend the game using the \/extend command.`;
+const START_GAME_MESSAGE = noOfRounds => `Welcome to *MJ Quizarium*! Let's begin with ${noOfRounds} rounds!\n\n_You can extend the game using the \/extend command._`;
 const STOP_GAME_MESSAGE = "The current game has been stopped.";
 const NO_GAME_IN_PLAY_MESSAGE = "No game is currently in play.";
 const HELP_MESSAGE =
@@ -43,7 +43,13 @@ const END_GAME_MESSAGE = (pointsMap) => {
 
     if (pointsArray.length) {
         template += `\n\n🏆 The winners are:\n`;
-        pointsArray.sort((a, b) => b.points-a.points).forEach(({ name, username, points, answers }, index) => {
+        pointsArray.sort((a, b) => {
+            if (b.points !== a.points) {
+                return b.points - a.points;
+            } else {
+                return b.answers - a.answers;
+            }
+        }).forEach(({ name, username, points, answers }, index) => {
             template += `     `;
             switch (index) {
                 case 1:
@@ -304,9 +310,7 @@ const stop = async (message, state) => {
         } else if (state.gameState === GAME_STATES.GAME_IN_PLAY) {
             let timeoutObj = timeOutMap.get(chatId);
             clearTimeout(timeoutObj);
-            timeOutMap.delete(chatId);
-            questionMap.delete(chatId);
-            sendMessage(chatId, STOP_GAME_MESSAGE);
+            return await endGame(chatId);
         } else if (state.gameState === GAME_STATES.GAME_NOT_IN_PLAY) {
             sendMessage(chatId, NO_GAME_IN_PLAY_MESSAGE);
         } else {
@@ -433,7 +437,7 @@ const answerQuestion = async (message) => {
         let { currentQuestionNo, currentHintNo, noOfRounds, questions } = questionState;
         let { answer } = questions[currentQuestionNo - 1];
 
-        if (text.toLowerCase().includes(answer.toLowerCase())) {
+        if (text.toLowerCase().trim().includes(answer.toLowerCase().trim())) {
             let timeoutObj = timeOutMap.get(chatId);
             clearTimeout(timeoutObj);
             timeOutMap.delete(chatId);
@@ -503,7 +507,7 @@ const sendQuestion = (chatId) => {
         currentQuestionNo - 1
     ];
 
-    let template = `❓ *QUESTION* ${currentQuestionNo}/${noOfRounds}\n${question} - _by ${author}${username ? ` (@${username})` : ``}_\n`;
+    let template = `❓ *QUESTION* ${currentQuestionNo}/${noOfRounds}\n${question}\n_by ${author}${username ? ` (@${username})` : ``}_\n`;
 
     switch (currentHintNo) {
         case 0:
@@ -572,13 +576,15 @@ const sendQuestion = (chatId) => {
 
 const endGame = async (chatId) => {
     try {
+        setTimeout(function () {
+            sendMessage(chatId, END_GAME_MESSAGE(pointsMap));
+        }, 3000);
+
         let state = {
             chatId,
             gameState: GAME_STATES.GAME_NOT_IN_PLAY
         };
-
-        sendMessage(chatId, END_GAME_MESSAGE(pointsMap));
-
+        
         await db.updateState(state);
         stateMap.set(chatId, state);
 
