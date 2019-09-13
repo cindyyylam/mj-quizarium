@@ -101,7 +101,7 @@ app.post("/", async (req, res) => {
     console.log("MESSAGE RECEIVED:", req.body);
     const { message } = req.body;
 
-    if (message) {
+    if (message && message.text) {
         const text = message.text.toLowerCase();
 
         if (text.match(/^(\/start|\/start@mjquizariumbot$)/)) {
