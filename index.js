@@ -106,6 +106,11 @@ app.post("/", async (req, res) => {
         const text = message.text.toLowerCase();
 
         if (text.match(/^(\/start|\/start@mjquizariumbot$)/)) {
+            if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
+                sendMessage(message.chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
+                return;
+            }
+
             try {
                 let state = stateMap.get(message.chat.id);
                 if (!state) {
@@ -121,6 +126,11 @@ app.post("/", async (req, res) => {
                 return;
             }
         } else if (text.match(/^(\/stop|\/stop@mjquizariumbot)$/)) {
+            if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
+                sendMessage(message.chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
+                return;
+            }
+
             try {
                 let state = stateMap.get(message.chat.id);
                 if (!state) {
@@ -136,6 +146,11 @@ app.post("/", async (req, res) => {
                 return;
             }
         } else if (text.match(/^(\/extend|\/extend@mjquizariumbot)$/)) {
+            if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
+                sendMessage(message.chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
+                return;
+            }
+
             try {
                 let state = stateMap.get(message.chat.id);
                 if (!state) {
@@ -151,6 +166,11 @@ app.post("/", async (req, res) => {
                 return;
             }
         } else if (text.match(/^(\/add|\/add@mjquizariumbot)$/)) {
+            if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
+                sendMessage(message.chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
+                return;
+            }
+
             try {
                 let state = stateMap.get(message.chat.id);
                 if (!state) {
@@ -166,6 +186,11 @@ app.post("/", async (req, res) => {
                 return;
             }
         } else if (text.match(/^(\/stats|\/stats@mjquizariumbot)$/)){
+            if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
+                sendMessage(message.chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
+                return;
+            }
+            
             try {
                 let leaderboard = await db.getLeaderboard();
                 console.log("index > /stats > LEADERBOARD:", leaderboard);
@@ -176,24 +201,16 @@ app.post("/", async (req, res) => {
                 res.send({});
                 return;
             }
-        } else if (text.match(/^\/help$/)) {
-            try {
-                if (message.chat.type !== "private") {
-                    return;
-                }
+        } else if (text.match(/^(\/help|\/help@mjquizariumbot)$/)) {
+            if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
+                sendMessage(message.chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
+                return;
+            }
 
+            try {
                 help(message);
             } catch (e) {
                 console.log("index > /help > ERROR:", e.message);
-            } finally {
-                res.send({});
-                return;
-            }
-        } else if (text.match(/^\/help@mjquizariumbot$/)) {
-            try {
-                help(message);
-            } catch (e) {
-                console.log("index > /help@mjquizariumbot > ERROR:", e.message);
             } finally {
                 res.send({});
                 return;
@@ -357,10 +374,7 @@ const add = async (message, state) => {
     try {
         let { text, chat } = message;
 
-        if (chat.type !== "private") {
-            sendMessage(chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
-            return;
-        } else if (state && state.gameState === GAME_STATES.GAME_IN_PLAY) {
+        if (state && state.gameState === GAME_STATES.GAME_IN_PLAY) {
             sendMessage(chat.id, GAME_CURRENTLY_IN_PLAY_MESSAGE);
             return;
         }
