@@ -106,12 +106,10 @@ app.post("/", async (req, res) => {
         const text = message.text.toLowerCase();
 
         if (text.match(/^(\/start|\/start@mjquizariumbot$)/)) {
-            if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
-                sendMessage(message.chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
-                return;
-            }
-
             try {
+                if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
+                    return;
+                }
                 let state = stateMap.get(message.chat.id);
                 if (!state) {
                     state = await db.selectState(message.chat.id);
@@ -126,12 +124,10 @@ app.post("/", async (req, res) => {
                 return;
             }
         } else if (text.match(/^(\/stop|\/stop@mjquizariumbot)$/)) {
-            if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
-                sendMessage(message.chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
-                return;
-            }
-
             try {
+                if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
+                    return;
+                }
                 let state = stateMap.get(message.chat.id);
                 if (!state) {
                     state = await db.selectState(message.chat.id);
@@ -146,12 +142,11 @@ app.post("/", async (req, res) => {
                 return;
             }
         } else if (text.match(/^(\/extend|\/extend@mjquizariumbot)$/)) {
-            if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
-                sendMessage(message.chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
-                return;
-            }
-
             try {
+                if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
+                    return;
+                }
+
                 let state = stateMap.get(message.chat.id);
                 if (!state) {
                     state = await db.selectState(message.chat.id);
@@ -166,12 +161,11 @@ app.post("/", async (req, res) => {
                 return;
             }
         } else if (text.match(/^(\/add|\/add@mjquizariumbot)$/)) {
-            if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
-                sendMessage(message.chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
-                return;
-            }
-
             try {
+                if (message.chat.type !== "private") {
+                    sendMessage(message.chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
+                    return;
+                }
                 let state = stateMap.get(message.chat.id);
                 if (!state) {
                     state = await db.selectState(message.chat.id);
@@ -186,12 +180,10 @@ app.post("/", async (req, res) => {
                 return;
             }
         } else if (text.match(/^(\/stats|\/stats@mjquizariumbot)$/)){
-            if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
-                sendMessage(message.chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
-                return;
-            }
-            
             try {
+                if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
+                    return;
+                }
                 let leaderboard = await db.getLeaderboard();
                 console.log("index > /stats > LEADERBOARD:", leaderboard);
                 sendMessage(message.chat.id, LEADERBOARD_MESSAGE(leaderboard));
@@ -202,12 +194,10 @@ app.post("/", async (req, res) => {
                 return;
             }
         } else if (text.match(/^(\/help|\/help@mjquizariumbot)$/)) {
-            if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
-                sendMessage(message.chat.id, PRIVATE_COMMAND_ONLY_MESSAGE(text));
-                return;
-            }
-
             try {
+                if (!text.includes("@mjquizariumbot") && message.chat.type !== "private") {
+                    return;
+                }
                 help(message);
             } catch (e) {
                 console.log("index > /help > ERROR:", e.message);
