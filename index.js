@@ -605,7 +605,7 @@ const endGame = async (chatId) => {
         console.log("index > endGame > OVERALL LEADERBOARD:", overAllLeaderboard);
         setTimeout(function () {
             sendMessage(chatId, LEADERBOARD_MESSAGE(overAllLeaderboard));
-        }, 2000);
+        }, 5000);
     } catch (e) {
         console.log("index > endGame > ERROR:", e.message);
     }
