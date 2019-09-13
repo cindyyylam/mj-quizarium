@@ -22,6 +22,7 @@ const mongoDb = {
 		} catch (e) {
 			console.log("mongoDb > selectState > ERROR:", e.message);
 		} finally {
+			console.log("closing mongodb client");
 			client.close();
 		}
 	},
@@ -48,6 +49,7 @@ const mongoDb = {
 		} catch (e) {
 			console.log("mongoDb > upsertState > ERROR:", e.message);
 		} finally {
+			console.log("closing mongodb client");
 			client.close();
 		}
 	},
@@ -64,6 +66,7 @@ const mongoDb = {
 		} catch (e) {
 			console.log("mongoDb > insertQuestion > ERROR:", e.message);
 		} finally {
+			console.log("closing mongodb client");
 			client.close();
 		}
 	},
@@ -80,6 +83,7 @@ const mongoDb = {
 		} catch (e) {
 			console.log("mongoDb > selectAllQuestions > ERROR:", e.message);
 		} finally {
+			console.log("closing mongodb client");
 			client.close();
 		}
 	},
@@ -116,6 +120,7 @@ const mongoDb = {
 		} catch (e) {
 			console.log("mongoDb > upsertLeaderboard > ERROR:", e.message);
 		} finally {
+			console.log("closing mongodb client");
 			client.close();
 		}
 	},
@@ -137,6 +142,7 @@ const mongoDb = {
 		} catch (e) {
 			console.log("mongoDb > selectUsers > ERROR:", e.message);
 		} finally {
+			console.log("closing mongodb client");
 			client.close();
 		}
 	},
@@ -153,6 +159,7 @@ const mongoDb = {
 		} catch (e) {
 			console.log("mongoDb > getLeaderboard > ERROR:", e.message);
 		} finally {
+			console.log("closing mongodb client");
 			client.close();
 		}
 	}
