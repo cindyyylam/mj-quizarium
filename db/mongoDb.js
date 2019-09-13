@@ -26,33 +26,27 @@ const mongoDb = {
 		}
 	},
 
-	insertState: async ({ chatId, gameState }) => {
-		console.log("mongoDb > insertState > ", { chatId, gameState });
+	upsertState: async ({ chatId, gameState }) => {
+		console.log("mongoDb > upsertState > ", { chatId, gameState });
 		const client = await mongoClient.connect();
-		if (!client) return console.log("mongoDb > insertState > ERROR: no monogDb client returned");
+		if (!client) return console.log("mongoDb > upsertState > ERROR: no monogDb client returned");
 
 		try {
 			const db = client.db(MONGODB_DB_NAME);
 			let collection = db.collection(MONGODB_STATE_COLLECTION_NAME);
-			return await collection.insertOne({ chatId, gameState });
+			return await collection.updateOne(
+				{ chatId }, 
+				{ 
+					$set: {
+						chatId, 
+						gameState 
+					}
+				}, 
+				{ 
+					upsert: true 
+				});
 		} catch (e) {
-			console.log("mongoDb > insertState > ERROR:", e.message);
-		} finally {
-			client.close();
-		}
-	},
-
-	updateState: async ({ chatId, gameState }) => {
-		console.log("mongoDb > updateState > ", { chatId, gameState });
-		const client = await mongoClient.connect();
-		if (!client) return console.log("mongoDb > updateState > ERROR: no monogDb client returned");
-
-		try {
-			const db = client.db(MONGODB_DB_NAME);
-			let collection = db.collection(MONGODB_STATE_COLLECTION_NAME);
-			return await collection.updateOne({ chatId }, { $set: { gameState } });
-		} catch (e) {
-			console.log("mongoDb > updateState > ERROR:", e.message);
+			console.log("mongoDb > upsertState > ERROR:", e.message);
 		} finally {
 			client.close();
 		}
@@ -90,28 +84,34 @@ const mongoDb = {
 		}
 	},
 
-	upsertLeaderboard: async (leaderboard) => {
+	upsertLeaderboard: async (pointsArray) => {
 		console.log("mongoDb > upsertLeaderboard");
-		console.log("mongoDb > upsertLeaderboard > LEADER BOARD:", leaderboard);
+		console.log("mongoDb > upsertLeaderboard > POINTS ARRAY:", pointsArray);
 		const client = await mongoClient.connect();
 		if (!client) return console.log("mongoDb > upsertLeaderboard > ERROR: no monogDb client returned");
 
 		try {
 			const db = client.db(MONGODB_DB_NAME);
 			let collection = db.collection(MONGODB_USER_COLLECTION_NAME);
-			asyncForEach([...leaderboard.values()], async ({ userId, name, username, points, answers }) => {
-				await collection.update(
+			console.log("start asyncForEach");
+			asyncForEach(pointsArray, async ({ userId, name, username, points, answers }) => {
+				await collection.updateOne(
 					{ userId },
 					{
-						userId,
-						name,
-						username,
-						points,
-						answers
+						$set: {
+							userId,
+							name,
+							username,
+						},
+						$inc: {
+							points,
+							answers
+						}
 					},
 					{ upsert: true }
 				);
 			});
+			console.log("end asyncForEach");
 			return;
 		} catch (e) {
 			console.log("mongoDb > upsertLeaderboard > ERROR:", e.message);

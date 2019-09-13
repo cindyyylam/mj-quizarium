@@ -35,14 +35,13 @@ const ADD_SUCCESS_MESSAGE =
     "The new question has been successfully added. Thank you! :)";
 const ADD_FAILURE_MESSAGE =
     "That's not a valid format. Please use this format:\n\n_When was NTU MJ formed?_ - _1993_";
-const END_GAME_MESSAGE = (pointsMap) => {
+const END_GAME_MESSAGE = (pointsArray) => {
     let template = `Game Ended! 🎊`;
 
-    let pointsArray = [...pointsMap.values()];
     console.log("index > END_GAME_MESSAGE > POINTS ARRAY:", pointsArray);
 
     if (pointsArray.length) {
-        template += `\n\n🏆 The winners are:\n`;
+        template += `\n\n🎉 The winners are:\n`;
         pointsArray.sort((a, b) => {
             if (b.points !== a.points) {
                 return b.points - a.points;
@@ -76,7 +75,7 @@ const LEADERBOARD_MESSAGE = (leaderboard) => {
         let template = `🏆 All Time Leaderboard 🏆\n`;
 
         leaderboard.sort((a, b) => b.points - a.points).forEach(({ name, username, points, answers }, index) => {
-            template += `     ${index}. *${name}* - ${points} points _(${answers} answers)_\n`;
+            template += `     ${index+=1}. *${name}* - ${points} points _(${answers} answers)_\n`;
         });
 
         return template;
@@ -239,22 +238,16 @@ const start = async (message, state) => {
     try {
         let chatId = message.chat.id;
 
-        if (!state) {
-            state = {
-                chatId,
-                gameState: GAME_STATES.GAME_IN_PLAY
-            }
-            await db.insertState(state);
-            stateMap.set(chatId, { chatId, gameState: state.gameState });
-        } else if (state.gameState === GAME_STATES.GAME_IN_PLAY) {
+        if (state && state.gameState === GAME_STATES.GAME_IN_PLAY) {
             sendMessage(chatId, GAME_ALREADY_IN_PLAY_MESSAGE);
             return;
         } else {
             state = {
-                ...state,
+                chatId,
                 gameState: GAME_STATES.GAME_IN_PLAY
             };
-            await db.updateState(state);
+
+            await db.upsertState(state);
             stateMap.set(chatId, state);
         }
 
@@ -304,7 +297,7 @@ const stop = async (message, state) => {
                 chatId,
                 gameState: GAME_STATES.GAME_NOT_IN_PLAY
             }
-            await db.insertState(state);
+            await db.upsertState(state);
             stateMap.set(chatId, { chatId, gameState: state.gameState });
             sendMessage(chatId, NO_GAME_IN_PLAY_MESSAGE);
         } else if (state.gameState === GAME_STATES.GAME_IN_PLAY) {
@@ -322,7 +315,7 @@ const stop = async (message, state) => {
                 ...state,
                 gameState: GAME_STATES.GAME_NOT_IN_PLAY
             };
-            await db.updateState(state);
+            await db.upsertState(state);
             stateMap.set(chatId, state);
         }
     } catch (e) {
@@ -375,11 +368,7 @@ const add = async (message, state) => {
         newState = { 
             chatId: chat.id, gameState: GAME_STATES.ADDING_QUESTION 
         };
-        if (!state) {
-            await db.insertState(newState);
-        } else {
-            await db.updateState(newState);
-        }
+        await db.upsertState(newState);
         stateMap.set(chat.id, newState);
 
 
@@ -413,7 +402,7 @@ const addQuestion = async (message, state) => {
             ...state,
             gameState: GAME_STATES.GAME_NOT_IN_PLAY
         };
-        await db.updateState(state);
+        await db.upsertState(state);
         stateMap.set(chat.id, state);
 
         sendMessage(chat.id, ADD_SUCCESS_MESSAGE);
@@ -437,7 +426,7 @@ const answerQuestion = async (message) => {
         let { currentQuestionNo, currentHintNo, noOfRounds, questions } = questionState;
         let { answer } = questions[currentQuestionNo - 1];
 
-        if (text.toLowerCase().trim().includes(answer.toLowerCase().trim())) {
+        if (text.toLowerCase().includes(answer.toLowerCase())) {
             let timeoutObj = timeOutMap.get(chatId);
             clearTimeout(timeoutObj);
             timeOutMap.delete(chatId);
@@ -456,12 +445,22 @@ const answerQuestion = async (message) => {
                 default:
                     break;
             }
-            let playerStats = pointsMap.get(message.from.id);
-            if (playerStats) {
-                pointsMap.set(message.from.id, { userId: message.from.id, name: message.from.first_name, username: message.from.username, points: playerStats.points + points, answers: playerStats.answers += 1 });
+            
+            let chatPointsState = pointsMap.get(chatId);
+            if (!chatPointsState) {
+                chatPointsState = new Map();
+                chatPointsState.set(message.from.id, { userId: message.from.id, name: message.from.first_name, username: message.from.username, points, answers: 1 });
+                pointsMap.set(chatId, chatPointsState);
             } else {
-                pointsMap.set(message.from.id, { userId: message.from.id, name: message.from.first_name, username: message.from.username, points, answers: 1 });
+                let playerPointsState = chatPointsState.get(message.from.id);
+                if (playerPointsState) {
+                    chatPointsState.set(message.from.id, { userId: message.from.id, name: message.from.first_name, username: message.from.username, points: playerPointsState.points + points, answers: playerPointsState.answers += 1 });
+                } else {
+                    chatPointsState.set(message.from.id, { userId: message.from.id, name: message.from.first_name, username: message.from.username, points, answers: 1 });
+                }
+                pointsMap.set(chatId, chatPointsState);
             }
+            
             console.log("index > answerQuestion > POINTS MAP:", pointsMap);
 
             let reply = `✅ Yes, the correct answer is *${answer}*!\n\n🎉 ${message.from.first_name} +${points}`;
@@ -490,7 +489,8 @@ const answerQuestion = async (message) => {
 
 const sendQuestion = (chatId) => {
     let questionState = questionMap.get(chatId);
-
+    if (!questionState) return;
+    
     let {
         currentQuestionNo,
         currentHintNo,
@@ -514,7 +514,7 @@ const sendQuestion = (chatId) => {
             template += `\n⏱ ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜`;
             break;
         case 1:
-            template += `Hint: ${answer
+            template += `\nHint: ${answer
                 .split("")
                 .map(char => char.replace(/[^\s]/g, "\\_"))
                 .join(" ")}\n`;
@@ -533,7 +533,7 @@ const sendQuestion = (chatId) => {
                 } while (ansArr[randInd] === "\\_" || ansArr[randInd] === " ");
                 ansArr[randInd] = "\\_";
             }
-            template += `Hint: ${ansArr.join(" ")}\n`;
+            template += `\nHint: ${ansArr.join(" ")}\n`;
             template += `\n⏱ ⬛⬛⬛⬛⬛⬛⬜⬜⬜⬜`;
             break;
         case 3:
@@ -543,7 +543,6 @@ const sendQuestion = (chatId) => {
 
     sendMessage(chatId, template);
 
-    // update question map
     if (currentHintNo === 3) {
         questionState = {
             ...questionState,
@@ -566,7 +565,6 @@ const sendQuestion = (chatId) => {
         };
         questionMap.set(chatId, questionState);
 
-        // set timeout
         let timeoutObject = setTimeout(function () {
             sendQuestion(chatId);
         }, 20000);
@@ -576,8 +574,11 @@ const sendQuestion = (chatId) => {
 
 const endGame = async (chatId) => {
     try {
+        let pointsArray = pointsMap.get(chatId) ? [...pointsMap.get(chatId).values()] : [];
+        console.log("index > endGame > POINTS ARRAY:", pointsArray);
+        
         setTimeout(function () {
-            sendMessage(chatId, END_GAME_MESSAGE(pointsMap));
+            sendMessage(chatId, END_GAME_MESSAGE(pointsArray));
         }, 3000);
 
         let state = {
@@ -585,31 +586,17 @@ const endGame = async (chatId) => {
             gameState: GAME_STATES.GAME_NOT_IN_PLAY
         };
         
-        await db.updateState(state);
+        await db.upsertState(state);
         stateMap.set(chatId, state);
 
         questionMap.delete(chatId);
         timeOutMap.delete(chatId);
 
-        let leaderboard = await db.selectUsers([...pointsMap.keys()].map((key) => ({ userId: key })));
-        console.log("index > endGame > OLD LEADERBOARD:", leaderboard);
-        let newLeaderboard = pointsMap.map(({ userId, name, username, points, answers }) => {
-            let existingUser = leaderboard.find(({ userId: id }) => id === userId);
-            if (existingUser) {
-                points += existingUser.points;
-                answers += existingUser.answers;
-            }
-            return {
-                userId,
-                name,
-                username,
-                points,
-                answers
-            }
-        })
-        console.log("index > endGame > NEW LEADERBOARD:", newLeaderboard);
-        await db.upsertLeaderboard(newLeaderboard);
-        pointsMap = new Map();
+        if (pointsArray.length) {
+            await db.upsertLeaderboard(pointsArray);
+            pointsMap.delete(chatId);
+        }
+        
         let overAllLeaderboard = await db.getLeaderboard();
         console.log("index > endGame > OVERALL LEADERBOARD:", overAllLeaderboard);
         sendMessage(chatId, LEADERBOARD_MESSAGE(overAllLeaderboard));
