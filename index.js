@@ -25,7 +25,6 @@ const PRIVATE_COMMAND_ONLY_MESSAGE = command =>
 const GAME_ALREADY_IN_PLAY_MESSAGE = "A game is already in play.";
 const GAME_CURRENTLY_IN_PLAY_MESSAGE = "A game is currently in play.";
 const START_GAME_MESSAGE = noOfRounds => `Welcome to *MJ Quizarium*! Let's begin with ${noOfRounds} rounds!\n\n_You can extend the game using the \/extend command._`;
-const STOP_GAME_MESSAGE = "The current game has been stopped.";
 const NO_GAME_IN_PLAY_MESSAGE = "No game is currently in play.";
 const HELP_MESSAGE =
     "Welcome to *MJ Quizarium*! 👊🏻👊🏼👊🏽👊🏾👊🏿\nHere is a list of commands to help you.\n\n/start - Start a new game\n/stop - Stop the current game\n/extend - Extend the game for another 10 rounds\n/add - Add a new question\n/help - Send help lol";
@@ -64,7 +63,7 @@ const END_GAME_MESSAGE = (pointsArray) => {
                     template += `🏅 `;
                     break;
             }
-            template += `*${name}* - ${points} points _(${answers} answers)_\n`;
+            template += `*${name}* - ${points} point${points > 1 ? `s` : ``} _(${answers} answer${answers > 1 ? `s` : ``})_\n`;
         })
     }
 
@@ -75,7 +74,7 @@ const LEADERBOARD_MESSAGE = (leaderboard) => {
         let template = `🏆 *All Time Leaderboard* 🏆\n`;
 
         leaderboard.sort((a, b) => b.points - a.points).forEach(({ name, username, points, answers }, index) => {
-            template += `     ${index+=1}. *${name}* - ${points} points _(${answers} answers)_\n`;
+            template += `     ${index += 1}. *${name}* - ${points} point${points > 1 ? `s` : ``} _(${answers} answer${answers > 1 ? `s` : ``})_\n`;
         });
 
         return template;
