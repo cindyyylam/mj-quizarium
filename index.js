@@ -50,13 +50,13 @@ const END_GAME_MESSAGE = (pointsArray) => {
         }).forEach(({ name, username, points, answers }, index) => {
             template += `     `;
             switch (index) {
-                case 1:
+                case 0:
                     template += `🥇 `;
                     break;
-                case 2:
+                case 1:
                     template += `🥈 `;
                     break;
-                case 3:
+                case 2:
                     template += `🥉 `;
                     break;
                 default:
