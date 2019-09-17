@@ -454,7 +454,18 @@ const answerQuestion = async (message) => {
             sendMessage(chatId, reply);
 
             if (currentQuestionNo === noOfRounds) {
+                let state = {
+                    chatId,
+                    gameState: GAME_STATES.GAME_NOT_IN_PLAY
+                };
+
+                stateMap.set(chatId, state);
+                questionMap.delete(chatId);
+                timeOutMap.delete(chatId);
+                
+                await db.upsertState(state);
                 await endGame(chatId);
+
                 return;
             }
 
@@ -567,17 +578,6 @@ const endGame = async (chatId) => {
         setTimeout(function () {
             sendMessage(chatId, END_GAME_MESSAGE(pointsArray));
         }, 2000);
-
-        let state = {
-            chatId,
-            gameState: GAME_STATES.GAME_NOT_IN_PLAY
-        };
-        
-        await db.upsertState(state);
-        stateMap.set(chatId, state);
-
-        questionMap.delete(chatId);
-        timeOutMap.delete(chatId);
 
         if (pointsArray.length) {
             await db.upsertLeaderboard(pointsArray);
