@@ -454,18 +454,7 @@ const answerQuestion = async (message) => {
             sendMessage(chatId, reply);
 
             if (currentQuestionNo === noOfRounds) {
-                let state = {
-                    chatId,
-                    gameState: GAME_STATES.GAME_NOT_IN_PLAY
-                };
-
-                stateMap.set(chatId, state);
-                questionMap.delete(chatId);
-                timeOutMap.delete(chatId);
-                
-                await db.upsertState(state);
                 await endGame(chatId);
-
                 return;
             }
 
@@ -572,6 +561,17 @@ const sendQuestion = (chatId) => {
 
 const endGame = async (chatId) => {
     try {
+        let state = {
+            chatId,
+            gameState: GAME_STATES.GAME_NOT_IN_PLAY
+        };
+
+        stateMap.set(chatId, state);
+        questionMap.delete(chatId);
+        timeOutMap.delete(chatId);
+                
+        await db.upsertState(state);
+
         let pointsArray = pointsMap.get(chatId) ? [...pointsMap.get(chatId).values()] : [];
         console.log("index > endGame > POINTS ARRAY:", pointsArray);
         
