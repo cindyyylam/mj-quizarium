@@ -104,7 +104,7 @@ app.post("/", async (req, res) => {
     if (message && message.text) {
         const text = message.text.toLowerCase();
 
-        if (text.match(/^(\/start|\/start@mjquizariumbot$)/)) {
+        if (text.match(/^(\/start|\/start@mjquizariumbot)$/)) {
             try {
                 let state = stateMap.get(message.chat.id);
                 if (!state) {
