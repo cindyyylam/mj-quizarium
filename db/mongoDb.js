@@ -10,50 +10,6 @@ const MONGODB_QUESTION_COLLECTION_NAME = "question";
 const MONGODB_USER_COLLECTION_NAME = "user";
 
 const mongoDb = {
-	selectState: async (chatId) => {
-		console.log("mongoDb > selectState > ", chatId);
-		const client = await mongoClient.connect();
-		if (!client) return console.log("mongoDb > selectState > ERROR: no monogDb client returned");
-		
-		try {
-			const db = client.db(MONGODB_DB_NAME);
-			let collection = db.collection(MONGODB_STATE_COLLECTION_NAME);
-			return await collection.findOne({ chatId });
-		} catch (e) {
-			console.log("mongoDb > selectState > ERROR:", e.message);
-		} finally {
-			console.log("closing mongodb client");
-			client.close();
-		}
-	},
-
-	upsertState: async ({ chatId, gameState }) => {
-		console.log("mongoDb > upsertState > ", { chatId, gameState });
-		const client = await mongoClient.connect();
-		if (!client) return console.log("mongoDb > upsertState > ERROR: no monogDb client returned");
-
-		try {
-			const db = client.db(MONGODB_DB_NAME);
-			let collection = db.collection(MONGODB_STATE_COLLECTION_NAME);
-			return await collection.updateOne(
-				{ chatId }, 
-				{ 
-					$set: {
-						chatId, 
-						gameState 
-					}
-				}, 
-				{ 
-					upsert: true 
-				});
-		} catch (e) {
-			console.log("mongoDb > upsertState > ERROR:", e.message);
-		} finally {
-			console.log("closing mongodb client");
-			client.close();
-		}
-	},
-
 	insertQuestion: async ({ question, answer, author, username }) => {
 		console.log("mongoDb > insertQuestion > ", { question, answer, author, username });
 		const client = await mongoClient.connect();

@@ -107,10 +107,6 @@ app.post("/", async (req, res) => {
         if (text.match(/^(\/start|\/start@mjquizariumbot)$/)) {
             try {
                 let state = stateMap.get(message.chat.id);
-                if (!state) {
-                    state = await db.selectState(message.chat.id);
-                    stateMap.set(message.chat.id, state);
-                }
                 console.log("index > /start > STATE MAP:", stateMap);
                 await start(message, state);
             } catch (e) {
@@ -122,10 +118,6 @@ app.post("/", async (req, res) => {
         } else if (text.match(/^(\/stop|\/stop@mjquizariumbot)$/)) {
             try {
                 let state = stateMap.get(message.chat.id);
-                if (!state) {
-                    state = await db.selectState(message.chat.id);
-                    stateMap.set(message.chat.id, state);
-                }
                 console.log("index > /stop > STATE MAP:", stateMap);
                 await stop(message, state);
             } catch (e) {
@@ -137,10 +129,6 @@ app.post("/", async (req, res) => {
         } else if (text.match(/^(\/extend|\/extend@mjquizariumbot)$/)) {
             try {
                 let state = stateMap.get(message.chat.id);
-                if (!state) {
-                    state = await db.selectState(message.chat.id);
-                    stateMap.set(message.chat.id, state);
-                }
                 console.log("index > /extend > STATE MAP:", stateMap);
                 extend(message, state);
             } catch (e) {
@@ -156,10 +144,6 @@ app.post("/", async (req, res) => {
                     return;
                 }
                 let state = stateMap.get(message.chat.id);
-                if (!state) {
-                    state = await db.selectState(message.chat.id);
-                    stateMap.set(message.chat.id, state);
-                }
                 console.log("index > /add > STATE MAP:", stateMap);
                 await add(message, state);
             } catch (e) {
@@ -191,10 +175,6 @@ app.post("/", async (req, res) => {
         } else if (!text.startsWith("/")) {
             try {
                 let state = stateMap.get(message.chat.id);
-                if (!state) {
-                    state = await db.selectState(message.chat.id);
-                    stateMap.set(message.chat.id, state);
-                }
                 console.log("index > message > STATE MAP:", stateMap);
                 if (!state) return;
 
@@ -237,7 +217,6 @@ const start = async (message, state) => {
                 gameState: GAME_STATES.GAME_IN_PLAY
             };
 
-            await db.upsertState(state);
             stateMap.set(chatId, state);
         }
 
@@ -287,7 +266,6 @@ const stop = async (message, state) => {
                 chatId,
                 gameState: GAME_STATES.GAME_NOT_IN_PLAY
             }
-            await db.upsertState(state);
             stateMap.set(chatId, { chatId, gameState: state.gameState });
             sendMessage(chatId, NO_GAME_IN_PLAY_MESSAGE);
         } else if (state.gameState === GAME_STATES.GAME_IN_PLAY) {
@@ -305,7 +283,6 @@ const stop = async (message, state) => {
                 ...state,
                 gameState: GAME_STATES.GAME_NOT_IN_PLAY
             };
-            await db.upsertState(state);
             stateMap.set(chatId, state);
         }
     } catch (e) {
@@ -355,7 +332,6 @@ const add = async (message, state) => {
         newState = { 
             chatId: chat.id, gameState: GAME_STATES.ADDING_QUESTION 
         };
-        await db.upsertState(newState);
         stateMap.set(chat.id, newState);
 
 
@@ -389,7 +365,6 @@ const addQuestion = async (message, state) => {
             ...state,
             gameState: GAME_STATES.GAME_NOT_IN_PLAY
         };
-        await db.upsertState(state);
         stateMap.set(chat.id, state);
 
         sendMessage(chat.id, ADD_SUCCESS_MESSAGE);
@@ -570,8 +545,6 @@ const endGame = async (chatId) => {
         questionMap.delete(chatId);
         timeOutMap.delete(chatId);
                 
-        await db.upsertState(state);
-
         let pointsArray = pointsMap.get(chatId) ? [...pointsMap.get(chatId).values()] : [];
         console.log("index > endGame > POINTS ARRAY:", pointsArray);
         
